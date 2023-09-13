@@ -205,7 +205,7 @@ class Birthdays(commands.Cog):
         today = datetime.now()
         # On attribue une année aux dates d'anniversaire pour pouvoir les trier (+1 si la date est passée)
         birthdays = [(m, d.replace(year=today.year + (d < today))) for m, d in birthdays.items()]
-        birthdays.sort(key=lambda x: x[1])
+        birthdays = sorted(birthdays, key=lambda x: x[1].timestamp())
         
         if not birthdays:
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun anniversaire n'est prévu dans les prochains jours")
