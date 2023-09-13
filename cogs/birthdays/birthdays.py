@@ -203,9 +203,8 @@ class Birthdays(commands.Cog):
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun membre n'a défini de date d'anniversaire")
         
         today = datetime.now()
-        # On attribue une année aux dates d'anniversaire pour pouvoir les trier (+1 si la date est passée)
-        birthdays = [(m, d.replace(year=today.year + (d < today))) for m, d in birthdays.items()]
-        birthdays = sorted(birthdays, key=lambda x: x[1].timestamp())
+        # On classe les anniversaires par date (du plus proche au plus lointain), on oublie pas ceux qui sont déjà passés cette année et qu'on reporte à l'année prochaine
+        birthdays = sorted([(m, d.replace(year=today.year + 1) if d < today.replace(year=today.year) else d) for m, d in birthdays.items()], key=lambda x: x[1])
         
         if not birthdays:
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun anniversaire n'est prévu dans les prochains jours")
