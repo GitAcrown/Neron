@@ -1,15 +1,12 @@
 import asyncio
 import logging
 import os
-import glob
-from typing import Optional, Literal
-import comm
+from typing import Literal, Optional
 
 import discord
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 from dotenv import dotenv_values
-from regex import F
 
 logging.basicConfig(
     level=logging.INFO,

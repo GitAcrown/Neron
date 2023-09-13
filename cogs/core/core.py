@@ -6,12 +6,12 @@ import textwrap
 import traceback
 from contextlib import redirect_stdout
 from typing import Any, Optional
+
 import discord
-
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 
-from common.utils import fuzzy, pretty
+from common.utils import fuzzy
 
 logger = logging.getLogger(f'Neron.{__name__.capitalize()}')
 
