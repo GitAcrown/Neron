@@ -109,13 +109,6 @@ async def main():
             await ctx.send(f"Arbre synchronisé dans {ret}/{len(guilds)}.")
             
         await bot.start(bot.config['TOKEN'])
-        
-        # Commandes essentielles ---------------------------
-        
-        @bot.hybrid_command(name="ping", description="Renvoie un pong")
-        async def ping(ctx: commands.Context) -> None:
-            """Ping"""
-            await ctx.send(f"Pong ! (`{round(bot.latency * 1000)}ms`)")
             
             
 if __name__ == "__main__":

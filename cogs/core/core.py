@@ -223,6 +223,11 @@ class Core(commands.Cog):
                 self._last_result = ret
                 await ctx.send(f'```py\n{value}{ret}\n```')
                 
+    @app_commands.command(name="ping")
+    async def ping(self, interaction: discord.Interaction) -> None:
+        """Renvoie le ping du bot"""
+        await interaction.response.send_message(f"Pong ! (`{round(self.bot.latency * 1000)}ms`)")
+                
     # ---- Commandes d'aide des commandes ----
     
     def _get_bot_commands(self):
