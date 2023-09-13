@@ -116,7 +116,8 @@ class Quotes(commands.Cog):
         
         self.quotify = app_commands.ContextMenu(
             name='Citer en image',
-            callback=self.message_menu_quotify
+            callback=self.message_menu_quotify,
+            extras={'description': "Créer une image avec le contenu du message"}
         )
         self.bot.tree.add_command(self.quotify)
     

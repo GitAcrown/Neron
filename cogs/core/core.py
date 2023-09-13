@@ -24,6 +24,7 @@ class HelpMenuView(discord.ui.View):
         self.__start_at = start_at
         
         self.commands : dict[str, list[app_commands.Command | app_commands.Group]] = cog._get_bot_commands()
+        self.ctx_commands : dict[str, list[app_commands.Command]] = cog._get_ctx_commands()
         self.pages = self.__build_pages()
         self.current_page = 0
         self.message: discord.Message | None = None
@@ -58,13 +59,36 @@ class HelpMenuView(discord.ui.View):
                     else:
                         text += f"- `/{command.qualified_name}` - {command.description}\n"
             embed.description = text
-            embed.set_footer(text=f"Module {len(pages) + 1}/{len(self.commands)} • Testez les commandes pour plus d'infos sur les arguments")
+            if self.ctx_commands:
+                embed.set_footer(text=f"Page {len(pages) + 1}/{len(self.commands) + 1} • Testez les commandes pour plus d'infos sur les arguments")
+            else:
+                embed.set_footer(text=f"Page {len(pages) + 1}/{len(self.commands)} • Testez les commandes pour plus d'infos sur les arguments")
+            pages.append(embed)
+        
+        if self.ctx_commands:
+            # On crée une page supplémentaire pour les commandes contextuelles
+            embed = discord.Embed(title=f"Aide pour les commandes contextuelles", color=0x2b2d31)
+            text = f"*Les commandes contextuelles sont des commandes qui s'activent en faisant un clic droit sur un message ou un utilisateur.*\n_ _\n"
+            for type, commands in self.ctx_commands.items():
+                commands = sorted(commands, key=lambda c: c.qualified_name)
+                chunk = ''
+                for command in commands:
+                    desc = command.extras['description'] if 'description' in command.extras else 'Aucune description'
+                    if command.qualified_name == self.__start_at:
+                        chunk += f"- **`{command.qualified_name}` - {desc}**\n"
+                    else:
+                        chunk += f"- `{command.qualified_name}` - {desc}\n"
+                if chunk:
+                    embed.add_field(name=type, value=chunk, inline=False)
+            embed.description = text
+            embed.set_footer(text=f"Commandes contextuelles • Utilisez une flèche pour revenir aux commandes classiques")
             pages.append(embed)
         return pages
             
     async def start(self):
         """Démarre le menu d'aide"""
         if self.__start_at:
+            # Si c'est une commande classique, on cherche la page correspondante
             for command in self.commands.values():
                 for c in command:
                     if isinstance(c, app_commands.Group):
@@ -75,6 +99,13 @@ class HelpMenuView(discord.ui.View):
                     elif c.qualified_name == self.__start_at:
                         self.current_page = list(self.commands.values()).index(command)
                         break
+            # Si c'est une commande contextuelle, on va à la dernière page
+            for type, commands in self.ctx_commands.items():
+                for command in commands:
+                    if command.qualified_name == self.__start_at:
+                        self.current_page = len(self.commands)
+                        break
+                    
         embed = self.pages[self.current_page]
         self.message = await self.__interaction.followup.send(embed=embed, view=self)
             
@@ -238,6 +269,14 @@ class Core(commands.Cog):
             for command in cog.get_app_commands():
                 modules[cog_name].append(command)
         return modules
+    
+    def _get_ctx_commands(self):
+        types = {'Utilisateur > Applications': [], 'Message > Applications': []}
+        for user_commands in self.bot.tree.get_commands(type=discord.AppCommandType.user):
+            types['Utilisateur > Applications'].append(user_commands)
+        for message_commands in self.bot.tree.get_commands(type=discord.AppCommandType.message):
+            types['Message > Applications'].append(message_commands)
+        return types
     
     @app_commands.command(name="help")
     @app_commands.rename(command='commande')
