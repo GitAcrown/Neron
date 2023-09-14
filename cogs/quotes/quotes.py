@@ -196,7 +196,7 @@ class Quotes(commands.Cog):
         wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
         lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
         while lines[-1] == "§":
-            text_size -= 3
+            text_size -= 2
             text_font = ImageFont.truetype(font_path, text_size, encoding='unic')
             wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
             lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
@@ -224,7 +224,7 @@ class Quotes(commands.Cog):
         """Ajoute au message initial les messages suivants jusqu'à atteindre la limite de caractères ou de messages"""
         messages = [starting_message]
         total_length = len(starting_message.content)
-        async for message in starting_message.channel.history(limit=20, after=starting_message):
+        async for message in starting_message.channel.history(limit=25, after=starting_message):
             if not message.content or message.content.isspace():
                 continue
             if message.author != starting_message.author:
@@ -253,7 +253,7 @@ class Quotes(commands.Cog):
         full_content = ' '.join([self.normalize_text(m.clean_content) for m in messages])
         try:
             author_name = f"@{messages[0].author.name}" if messages[0].author.name.lower() == messages[0].author.display_name.lower() else f"{messages[0].author.display_name} (@{messages[0].author.name})"
-            image = self.create_quote_image(avatar, full_content, author_name, message_date)
+            image = self.create_quote_image(avatar, full_content, author_name, message_date, size=(700, 700))
         except Exception as e:
             logger.exception(e)
             raise commands.CommandError(f"Impossible de créer l'image de la citation : `{e}`")
