@@ -191,7 +191,7 @@ class Birthdays(commands.Cog):
         
     @bday_group.command(name='next')
     @app_commands.rename(limit='limite')
-    async def _next_birthdays(self, interaction: Interaction, limit: app_commands.Range[int, 1, 20] = 10):
+    async def _next_birthdays(self, interaction: Interaction, limit: app_commands.Range[int, 1, 50] = 10):
         """Afficher les prochains anniversaires
         
         :param limit: Nombre d'anniversaires à afficher"""
@@ -204,7 +204,7 @@ class Birthdays(commands.Cog):
         
         today = datetime.now()
         # Ceux de cette année
-        listebday = [(m, d) for m, d in birthdays.items() if d.month >= today.month and d.day >= today.day]
+        listebday = [(m, d.replace(year=today.year)) for m, d in birthdays.items() if d.month >= today.month and d.day >= today.day]
         # Ceux de l'année prochaine
         listebday += [(m, d.replace(year=today.year + 1)) for m, d in birthdays.items() if d.month < today.month or d.day < today.day]
         
