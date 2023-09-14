@@ -47,6 +47,9 @@ async def main():
             print(f"> Connecté à {len(bot.guilds)} serveurs :\n" + '\n'.join([f"- {guild.name} ({guild.id})" for guild in bot.guilds]))
             print("--------------")
             print("Prêt !")
+
+            # On définit le statut du bot
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"/help"))
     
         @bot.tree.error
         async def on_command_error(interaction: discord.Interaction, error):
