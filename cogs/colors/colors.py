@@ -274,7 +274,7 @@ class Colors(commands.Cog):
     # COMMANDES ===========================================================
     
     @app_commands.command(name='palette')
-    @app_commands.rename(colors='nombre', file='fichier', user='utilisateur')
+    @app_commands.rename(colors='nb_couleurs', file='fichier', user='utilisateur')
     async def _get_img_palette(self, interaction: Interaction, colors: app_commands.Range[int, 3, 10] = 5, url: str | None = None, file: discord.Attachment | None = None, user: discord.Member | None = None):
         """Génère une palette de couleurs à partir d'une image ou d'une URL
         
@@ -426,7 +426,7 @@ class Colors(commands.Cog):
         if self.is_role_limited(member):
             return await interaction.response.send_message("**Erreur** · Vous n'avez pas le droit de changer de couleur car la modération a décidé de limiter cette fonctionnalités à certains membres", ephemeral=True)
         
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         colors = await self.get_avatar_colors(member, count=1)
         if colors:
             role = await self.fetch_role(guild, colors[0], requested_by=member)
