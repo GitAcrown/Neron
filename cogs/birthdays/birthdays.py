@@ -203,14 +203,16 @@ class Birthdays(commands.Cog):
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun membre n'a défini de date d'anniversaire")
         
         today = datetime.now()
-        # On classe les anniversaires par date (du plus proche au plus lointain), on oublie pas ceux qui sont déjà passés cette année et qu'on reporte à l'année prochaine
-        birthdays = sorted([(m, d.replace(year=today.year + 1) if d < today.replace(year=today.year) else d) for m, d in birthdays.items()], key=lambda x: x[1])
+        # Ceux de cette année
+        listebday = [(m, d) for m, d in birthdays.items() if d.month >= today.month and d.day >= today.day]
+        # Ceux de l'année prochaine
+        listebday += [(m, d.replace(year=today.year + 1)) for m, d in birthdays.items() if d.month < today.month or d.day < today.day]
         
-        if not birthdays:
+        if not listebday:
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun anniversaire n'est prévu dans les prochains jours")
         
         msg = ''
-        for b in birthdays[:limit]:
+        for b in listebday[:limit]:
             user, date = b
             msg += f"{user.mention} · <t:{int(date.timestamp())}:D>\n"
         embed = discord.Embed(title="Prochains anniversaires", description=msg, color=0x2b2d31)
