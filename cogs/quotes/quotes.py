@@ -237,15 +237,20 @@ class Quotes(commands.Cog):
                 break
         return messages
     
-    def parse_emojis(self, text: str) -> str:
-        """Remplace les emojis par leur nom"""
-        return re.sub(r'<a?:(\w+):\d+>', r':\1:', text)
+    def normalize_text(self, text: str) -> str:
+        """Effectue des remplacements de texte pour éviter les problèmes d'affichage"""
+        # On remplace les codes d'emojis par leurs noms
+        text = re.sub(r'<a?:(\w+):\d+>', r':\1:', text)
+        # On retire les balises de formatage markdown
+        text = re.sub(r'(\*|_|`|~|\\)', r'\\\1', text)
+        
+        return text
     
     async def quote_messages(self, messages: list[discord.Message]) -> discord.File:
         messages = sorted(messages, key=lambda m: m.created_at)
         avatar = BytesIO(await messages[0].author.display_avatar.read())
         message_date = messages[0].created_at.strftime("%d/%m/%y")
-        full_content = ' '.join([self.parse_emojis(m.clean_content) for m in messages])
+        full_content = ' '.join([self.normalize_text(m.clean_content) for m in messages])
         try:
             author_name = f"@{messages[0].author.name}" if messages[0].author.name.lower() == messages[0].author.display_name.lower() else f"{messages[0].author.display_name} (@{messages[0].author.name})"
             image = self.create_quote_image(avatar, full_content, author_name, message_date, size=(750, 750))
