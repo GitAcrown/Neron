@@ -493,5 +493,16 @@ class Colors(commands.Cog):
         await self.bulk_move_roles(guild)
         await interaction.followup.send('**Succès** · Les rôles de couleurs ont été rangés', ephemeral=True)
         
+    @managecolor_group.command(name='clean')
+    async def _clean_colors(self, interaction: Interaction):
+        """Supprime tous les rôles de couleurs inutilisés"""
+        guild = interaction.guild
+        if not guild:
+            return await interaction.response.send_message("**Erreur** · Cette commande ne peut pas être utilisée en dehors d'un serveur", ephemeral=True)
+        
+        await interaction.response.defer()
+        await self.clean_roles(guild)
+        await interaction.followup.send('**Succès** · Les rôles de couleurs inutilisés ont été supprimés', ephemeral=True)
+        
 async def setup(bot):
     await bot.add_cog(Colors(bot))
