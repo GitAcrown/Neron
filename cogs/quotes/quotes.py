@@ -196,7 +196,7 @@ class Quotes(commands.Cog):
         wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
         lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
         while lines[-1] == "§":
-            text_size -= 2
+            text_size -= 3
             text_font = ImageFont.truetype(font_path, text_size, encoding='unic')
             wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
             lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
@@ -224,7 +224,7 @@ class Quotes(commands.Cog):
         """Ajoute au message initial les messages suivants jusqu'à atteindre la limite de caractères ou de messages"""
         messages = [starting_message]
         total_length = len(starting_message.content)
-        async for message in starting_message.channel.history(limit=30, after=starting_message):
+        async for message in starting_message.channel.history(limit=20, after=starting_message):
             if not message.content or message.content.isspace():
                 continue
             if message.author != starting_message.author:
