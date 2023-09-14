@@ -72,7 +72,7 @@ class Colors(commands.Cog):
                     except discord.HTTPException:
                         logger.warning(f'Impossible d\'ajouter le rôle de couleur automatique à {after}')
                     # On envoie un message
-                    em = discord.Embed(title='M.à.j automatique du rôle de couleur', description=f'Vous avez obtenu le rôle de couleur {role.mention}', color=role.color)
+                    em = discord.Embed(title='M.à.j automatique du rôle de couleur', description=f'Vous avez obtenu le rôle de couleur **#{role.name}** sur ***{after.guild.name}***', color=role.color)
                     em.set_thumbnail(url=self.get_color_block(colors[0]))
                     em.set_footer(text=self.get_color_name(colors[0]) or 'Nom inconnu')
                     try:
