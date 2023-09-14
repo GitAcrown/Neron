@@ -174,13 +174,13 @@ class Colors(commands.Cog):
             role = self.get_user_color_role(requested_by)
             if role and self.is_recyclable(role, [requested_by]):
                 # On le modifie et on le renvoie
-                await role.edit(name=f'#{hex_color}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle recyclé pour {requested_by}')
+                await role.edit(name=f'#{hex_color.upper()}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle recyclé pour {requested_by}')
         
         # On vérifie si un autre rôle recyclable existe
         for role in self.get_color_roles(guild):
             if self.is_recyclable(role, []):
                 # On le modifie et on le renvoie
-                await role.edit(name=f'#{hex_color}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle recyclé pour {requested_by}')
+                await role.edit(name=f'#{hex_color.upper()}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle recyclé pour {requested_by}')
                 return role
             
         # Sinon on crée un nouveau rôle et on le range
@@ -242,39 +242,6 @@ class Colors(commands.Cog):
         if r.status_code != 200:
             return None
         return r.json()['name']['value']
-    
-    async def simulate_discord_display(self, user: discord.User | discord.Member, name_color: tuple) -> Image.Image:
-        path = str(self.data.bundled_data_path)
-        avatar = await user.display_avatar.read()
-        avatar = Image.open(BytesIO(avatar))
-        avatar = avatar.resize((128, 128)).convert("RGBA")
-        
-        # Mettre l'avatar en cercle
-        mask = Image.new("L", avatar.size, 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0) + avatar.size, fill=255)
-        avatar.putalpha(mask)
-        avatar = avatar.resize((50, 50))
-        
-        images = []
-        # Créer une version avec le fond foncé et une version avec le fond clair
-        for v in [(54, 57, 63), (255, 255, 255)]:
-            bg = Image.new("RGBA", (320, 94), v)
-            bg.paste(avatar, (10, 10), avatar)
-            d = ImageDraw.Draw(bg)
-            avatar_font = ImageFont.truetype(f"{path}/gg_sans.ttf", 18)
-            d.text((74, 14), user.display_name, font=avatar_font, fill=name_color)
-        
-            content_font = ImageFont.truetype(f"{path}/gg_sans_light.ttf", 14)
-            text_color = (255, 255, 255) if v == (54, 57, 63) else (0, 0, 0)
-            d.text((74, 40), "Ceci est une représentation de\nla couleur qu'aurait votre pseudo", font=content_font, fill=text_color)
-            images.append(bg)
-        
-        # On met les deux images une en dessous de l'autre
-        full = Image.new("RGBA", (320, 188), (54, 57, 63))
-        full.paste(images[0], (0, 0), images[0])
-        full.paste(images[1], (0, 94), images[1])
-        return full
     
     def draw_image_palette(self, img: str | BytesIO, n_colors: int = 5) -> Image.Image:
         """Ajoute la palette de N couleurs extraite de l'image sur le côté de celle-ci avec leurs codes hexadécimaux"""
