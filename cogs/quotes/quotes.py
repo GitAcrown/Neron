@@ -253,7 +253,7 @@ class Quotes(commands.Cog):
         full_content = ' '.join([self.normalize_text(m.clean_content) for m in messages])
         try:
             author_name = f"@{messages[0].author.name}" if messages[0].author.name.lower() == messages[0].author.display_name.lower() else f"{messages[0].author.display_name} (@{messages[0].author.name})"
-            image = self.create_quote_image(avatar, full_content, author_name, message_date, size=(750, 750))
+            image = self.create_quote_image(avatar, full_content, author_name, message_date, size=(625, 625))
         except Exception as e:
             logger.exception(e)
             raise commands.CommandError(f"Impossible de créer l'image de la citation : `{e}`")
