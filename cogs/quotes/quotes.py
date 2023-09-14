@@ -242,7 +242,7 @@ class Quotes(commands.Cog):
         # On remplace les codes d'emojis par leurs noms
         text = re.sub(r'<a?:(\w+):\d+>', r':\1:', text)
         # On retire les balises de formatage markdown
-        text = re.sub(r'(\*|_|`|~|\\)', r'\\\1', text)
+        text = re.sub(r'(\*|_|`|~|\\)', r'', text)
         
         return text
     
