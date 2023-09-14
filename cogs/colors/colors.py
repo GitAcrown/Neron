@@ -164,7 +164,7 @@ class Colors(commands.Cog):
                 return role
             
         # Sinon on crée un nouveau rôle et on le range
-        role = await guild.create_role(name=f'#{hex_color}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle créé pour {requested_by}')
+        role = await guild.create_role(name=f'#{hex_color.upper()}', color=discord.Color(int(hex_color, 16)), reason=f'Rôle créé pour {requested_by}')
         await self.move_role(role)
         return role
     
