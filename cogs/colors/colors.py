@@ -27,6 +27,7 @@ class Colors(commands.Cog):
         default_settings = {
             'Enabled': 1,
             'BoundaryRole': 0,
+            'LimitToRole': 0
         }
         self.data.build_settings_table(guilds, default_settings)
         
@@ -48,6 +49,9 @@ class Colors(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before: discord.Member, after: discord.Member):
         if not self.is_enabled(before.guild):
+            return
+
+        if self.is_role_limited(after):
             return
             
         if before.display_avatar != after.display_avatar:
@@ -96,6 +100,22 @@ class Colors(commands.Cog):
     def set_boundary_role(self, guild: discord.Guild, role: discord.Role | None):
         """Définit le rôle servant de repère pour le rangement des rôles de couleurs"""
         self.data.update_settings(guild, {'BoundaryRole': role.id if role else 0})
+        
+    def get_limit_to_role(self, guild: discord.Guild) -> discord.Role | None:
+        """Renvoie le rôle limitant l'utilisation des rôles de couleurs aux membres le possédant"""
+        limit_to_role = self.data.get_setting(guild, 'LimitToRole', cast_as=int)
+        return guild.get_role(limit_to_role) if limit_to_role else None
+    
+    def set_limit_to_role(self, guild: discord.Guild, role: discord.Role | None):
+        """Définit le rôle limitant l'utilisation des rôles de couleurs aux membres le possédant"""
+        self.data.update_settings(guild, {'LimitToRole': role.id if role else 0})
+        
+    def is_role_limited(self, member: discord.Member) -> bool:
+        """Vérifie si l'utilisateur a le droit de changer de couleur"""
+        limit_to_role = self.get_limit_to_role(member.guild)
+        if limit_to_role and limit_to_role not in member.roles:
+            return True
+        return False
         
     # User settings -------------------------------------------------------
     
@@ -344,6 +364,9 @@ class Colors(commands.Cog):
         if not self.is_enabled(guild):
             return await interaction.response.send_message("**Erreur** · Le système de rôles de couleurs n'est pas activé sur ce serveur", ephemeral=True)
         
+        if self.is_role_limited(member):
+            return await interaction.response.send_message("**Erreur** · Vous n'avez pas le droit de changer de couleur car la modération a décidé de limiter cette fonctionnalités à certains membres", ephemeral=True)
+        
         if not re.match(r'^#?[0-9A-F]{6}$', color, re.IGNORECASE):
             return await interaction.response.send_message("**Erreur** · La couleur doit être au format hexadécimal (ex. #FF0123)", ephemeral=True)
         
@@ -410,11 +433,14 @@ class Colors(commands.Cog):
         """
         member = interaction.user
         guild = interaction.guild
-        if not guild:
+        if not guild or not isinstance(member, discord.Member):
             return await interaction.response.send_message("**Erreur** · Cette commande ne peut pas être utilisée en dehors d'un serveur", ephemeral=True)
         
         if not self.is_enabled(guild):
             return await interaction.response.send_message("**Erreur** · Le système de rôles de couleurs n'est pas activé sur ce serveur", ephemeral=True)
+        
+        if self.is_role_limited(member):
+            return await interaction.response.send_message("**Erreur** · Vous n'avez pas le droit de changer de couleur car la modération a décidé de limiter cette fonctionnalités à certains membres", ephemeral=True)
         
         self.set_autoswitch(member, enabled)
         await interaction.response.send_message(f"**Paramètre modifié** · Le changement automatique de couleur a été {'activé' if enabled else 'désactivé'}", ephemeral=True)
@@ -429,6 +455,9 @@ class Colors(commands.Cog):
         
         if not self.is_enabled(guild):
             return await interaction.response.send_message("**Erreur** · Le système de rôles de couleurs n'est pas activé sur ce serveur", ephemeral=True)
+        
+        if self.is_role_limited(member):
+            return await interaction.response.send_message("**Erreur** · Vous n'avez pas le droit de changer de couleur car la modération a décidé de limiter cette fonctionnalités à certains membres", ephemeral=True)
         
         await interaction.response.defer()
         colors = await self.get_avatar_colors(member, count=1)
@@ -481,6 +510,20 @@ class Colors(commands.Cog):
         
         self.set_boundary_role(guild, role)
         await interaction.response.send_message(f"**Paramètre modifié** · Le rôle servant de repère a été défini sur {role.mention if role else '`aucun`'}", ephemeral=True)
+        
+    @managecolor_group.command(name='limit')
+    @app_commands.rename(role='rôle')
+    async def _set_limit_to_role(self, interaction: Interaction, role: discord.Role | None):
+        """Définir le rôle limitant l'utilisation des rôles de couleurs aux membres le possédant
+        
+        :param role: Rôle limitant l'utilisation des rôles de couleurs
+        """
+        guild = interaction.guild
+        if not guild:
+            return await interaction.response.send_message("**Erreur** · Cette commande ne peut pas être utilisée en dehors d'un serveur", ephemeral=True)
+        
+        self.set_limit_to_role(guild, role)
+        await interaction.response.send_message(f"**Paramètre modifié** · Le rôle limitant l'utilisation des rôles de couleurs a été défini sur {role.mention if role else '`aucun`'}", ephemeral=True)
         
     @managecolor_group.command(name='reorder')
     async def _reorder_colors(self, interaction: Interaction):
