@@ -89,7 +89,7 @@ class QuotifyView(discord.ui.View):
                 await self.interaction.edit_original_response(content=str(e), view=None)
             return None
         
-    @discord.ui.button(label="Enregistrer et quitter", style=discord.ButtonStyle.green)
+    @discord.ui.button(label="Enregistrer et quitter", style=discord.ButtonStyle.green, row=1)
     async def save_quit(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         new_view = discord.ui.View()
@@ -99,7 +99,7 @@ class QuotifyView(discord.ui.View):
             await self.interaction.edit_original_response(view=new_view)
         self.stop()
         
-    @discord.ui.button(label="Annuler", style=discord.ButtonStyle.red)
+    @discord.ui.button(label="Annuler", style=discord.ButtonStyle.red, row=1)
     async def quit(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.stop()
         await interaction.response.defer()
