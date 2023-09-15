@@ -71,7 +71,10 @@ class Polls(commands.Cog):
         embed = discord.Embed(title=f"***{data['title']}***", description=pretty.codeblock(tabulate(table, tablefmt='plain'), 'diff' if results else 'css'), color=0x2b2d31)
         embed.set_author(name=f"Sondage de {data['author'].display_name}", icon_url=data['author'].display_avatar.url)
         end_time = datetime.now() + timedelta(seconds=data['timeout'])
-        embed.set_footer(text=f"Fermeture du sondage · {pretty.humanize_absolute_time(end_time, assume_today=True)}")
+        if results:
+            embed.set_footer(text=f"Sondage terminé")
+        else:
+            embed.set_footer(text=f"Fermeture du sondage · {pretty.humanize_absolute_time(end_time, assume_today=True)}")
         
         return embed
     
@@ -121,7 +124,7 @@ class Polls(commands.Cog):
         
         jumpview = discord.ui.View()
         jumpview.add_item(discord.ui.Button(label="Voir les résultats", url=msg.jump_url))
-        await channel.send(f"**Fin du sondage** · Le sondage ***`{title}`*** est terminé !", view=jumpview, delete_after=30)
+        await channel.send(f"**Fin du sondage** · Le sondage ***`{title}`*** est terminé !", view=jumpview, delete_after=timeout)
         await msg.edit(embed=self.get_fastpoll_embed(self.sessions[channel.id], results=True), content="**Sondage terminé** · Voici les résultats du sondage !", view=None)
         if pin_message:
             try:
