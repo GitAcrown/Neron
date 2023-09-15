@@ -37,6 +37,9 @@ class Colors(commands.Cog):
             autoswitch INTEGER DEFAULT 0 CHECK(autoswitch IN (0, 1)))""" # Si l'utilisateur a activé le changement automatique de couleur
         self.data.get('Users').execute(query)
         
+    def cog_unload(self):
+        self.data.close_all()
+        
     @commands.Cog.listener()
     async def on_ready(self):
         self.__initialize_guilds(self.bot.guilds)
