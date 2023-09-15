@@ -1,8 +1,7 @@
 import logging
 import re
-from copy import copy
 from datetime import datetime, timedelta
-from typing import Any, List, Optional
+from typing import Any, List
 
 import discord
 from discord import Interaction, app_commands
