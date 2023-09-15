@@ -215,10 +215,15 @@ class Birthdays(commands.Cog):
             return await interaction.response.send_message("**Aucun anniversaire** · Aucun anniversaire n'est prévu dans les prochains jours")
         
         msg = ''
+        year_changed = False
         for b in listebday[:limit]:
             user, date = b
+            if date.year != today.year and not year_changed:
+                msg += f"**---- {date.year} ----**\n"
+                year_changed = True
             msg += f"{user.mention} · <t:{int(date.timestamp())}:D>\n"
         embed = discord.Embed(title="Prochains anniversaires", description=msg, color=0x2b2d31)
+        embed.set_footer(text=f"{limit}/{len(listebday)} anniversaires affichés")
         await interaction.response.send_message(embed=embed)
         
     mod_group = app_commands.Group(name='configbdays', description="Paramètres des anniversaires", default_permissions=discord.Permissions(administrator=True), guild_only=True)
