@@ -118,6 +118,10 @@ class Polls(commands.Cog):
         self.sessions[channel.id]['embed_message'] = msg
         await interaction.response.send_message(f"**Sondage créé** · Le sondage a été créé dans {channel.mention} !", ephemeral=True, delete_after=15)
         await view.wait()
+        
+        jumpview = discord.ui.View()
+        jumpview.add_item(discord.ui.Button(label="Voir les résultats", url=msg.jump_url))
+        await channel.send(f"**Fin du sondage** · Le sondage ***`{title}`*** est terminé !", view=jumpview, delete_after=30)
         await msg.edit(embed=self.get_fastpoll_embed(self.sessions[channel.id], results=True), content="**Sondage terminé** · Voici les résultats du sondage !", view=None)
         if pin_message:
             try:
@@ -125,6 +129,7 @@ class Polls(commands.Cog):
             except discord.HTTPException:
                 pass
         del self.sessions[channel.id]
+        
     
 async def setup(bot):
     await bot.add_cog(Polls(bot))
