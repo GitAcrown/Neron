@@ -58,6 +58,7 @@ class Starboard(commands.Cog):
     
     @tasks.loop(hours=12)
     async def task_message_expire(self):
+        logger.info("Effacement des messages expirés...")
         for guild in self.bot.guilds:
             self.clean_expired_messages(guild)
         
@@ -251,7 +252,6 @@ class Starboard(commands.Cog):
             return
         
         if self.add_message_vote(guild, message.id, member.id): # type: ignore
-            print(f"Vote de {member.name} sur {message.id}")
             await self.handle_starboard_message(message)
         
     # COMMANDS ----------------------------------
