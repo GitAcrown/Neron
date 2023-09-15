@@ -203,7 +203,7 @@ class Starboard(commands.Cog):
         if len(votes) < threshold:
             # Si le message à la moitié + 1 vote et qu'on doit notifier, on notifie
             if notify and len(votes) == threshold // 2 + 1 and threshold > 1:
-                await message.reply(f"`{emote}` Ce message a atteint plus de la moitié du seuil de votes requis pour apparaître dans {starboard_channel.mention} (**{len(votes)}**/{threshold}) !", mention_author=False, delete_after=120)
+                await message.reply(f"`{emote}` Ce message a atteint plus de la moitié du seuil de votes requis pour apparaître dans {starboard_channel.mention} (**{len(votes)}**/{threshold}) !", mention_author=False, delete_after=300)
             return
         
         view = discord.ui.View()
