@@ -55,15 +55,15 @@ class Polls(commands.Cog):
         
     def get_fastpoll_embed(self, data: dict, *, results: bool = False):
         """Renvoie l'embed correspondant au sondage rapide"""
-        winner = None
+        winners = []
         if results:
-            winner = max(data['votes'], key=lambda x: len(data['votes'][x]))
+            winners = [choice for choice, votes in data['votes'].items() if len(votes) == max(len(votes) for votes in data['votes'].values())]
         
         table = []
         total_votes = sum(len(votes) for votes in data['votes'].values())
         for choice, votes in data['votes'].items():
             if results:
-                choice = f'+ {choice.capitalize()}' if choice == winner else f'- {choice.capitalize()}'
+                choice = f'+ {choice.capitalize()}' if choice in winners else f'- {choice.capitalize()}'
                 table.append([choice, len(votes), pretty.bargraph(len(votes), total_votes, lenght=8, display_percent=True)])
             else:
                 table.append([choice.capitalize(), len(votes), pretty.bargraph(len(votes), total_votes, lenght=8)])
