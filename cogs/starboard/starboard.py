@@ -1,7 +1,6 @@
 import logging
-import random
 from datetime import datetime
-from typing import Any, Coroutine, Iterable
+from typing import Any, Iterable
 
 import discord
 from discord import Interaction, app_commands
