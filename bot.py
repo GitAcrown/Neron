@@ -46,10 +46,10 @@ async def main():
             print("> Lien d'invitation : {}".format(discord.utils.oauth_url(int(bot.config["APP_ID"]), permissions=discord.Permissions(int(bot.config['PERMISSIONS_INT'])))))
             print(f"> Connecté à {len(bot.guilds)} serveurs :\n" + '\n'.join([f"- {guild.name} ({guild.id})" for guild in bot.guilds]))
             print("--------------")
-            print("Prêt !")
-
             # On définit le statut du bot
-            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"/help"))
+            status = '/help'
+            await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=status))
+            print(f"> Statut défini sur {status}")
     
         @bot.tree.error
         async def on_command_error(interaction: discord.Interaction, error):
