@@ -229,7 +229,7 @@ class Colors(commands.Cog):
         """Renvoie les couleurs dominantes de l'avatar de l'utilisateur"""
         avatar = await member.display_avatar.read()
         avatar = Image.open(BytesIO(avatar))
-        colors = colorgram.extract(avatar, count)
+        colors = colorgram.extract(avatar.resize((100, 100)), count)
         colors = [f'{c.rgb.r:02x}{c.rgb.g:02x}{c.rgb.b:02x}' for c in colors]
         return [c for c in colors if c != DISCORD_INVALID_COLOR]
     
@@ -249,8 +249,8 @@ class Colors(commands.Cog):
     def draw_image_palette(self, img: str | BytesIO, n_colors: int = 5) -> Image.Image:
         """Ajoute la palette de N couleurs extraite de l'image sur le côté de celle-ci avec leurs codes hexadécimaux"""
         path = str(self.data.bundled_data_path)
-        colors : list[colorgram.Color] = colorgram.extract(img, n_colors)
         image = Image.open(img).convert("RGBA")
+        colors : list[colorgram.Color] = colorgram.extract(image.resize((100, 100)), n_colors)
         image = ImageOps.contain(image, (500, 500))
         iw, ih = image.size
         w, h = (iw + 100, ih)

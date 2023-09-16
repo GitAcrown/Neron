@@ -159,7 +159,7 @@ class Quotes(commands.Cog):
             return await interaction.response.send_message("**Erreur** · Impossible de créer le menu de citation", ephemeral=True)
         
     # Quotify ---------------------------------------------------------------
-        
+
     def _add_gradient(self, image: Image.Image, gradient_magnitude=1.0, color: Tuple[int, int, int]=(0, 0, 0)):
         im = image
         if im.mode != 'RGBA':
@@ -181,7 +181,7 @@ class Quotes(commands.Cog):
         box_w, _ = int(w * 0.92), int(h * 0.72)
         image = Image.open(avatar).convert("RGBA").resize(size)
         font_path = str(self.data.bundled_data_path / "NotoBebasNeue.ttf")
-        bg_color = colorgram.extract(avatar, 1)[0].rgb 
+        bg_color = colorgram.extract(image.resize((int(w*0.1), int(w*0.1))), 1)[0].rgb 
         grad_magnitude = 0.80 + 0.05 * (len(text) // 100)
         image = self._add_gradient(image, grad_magnitude, bg_color)
         luminosity = (0.2126 * bg_color[0] + 0.7152 * bg_color[1] + 0.0722 * bg_color[2]) / 255
