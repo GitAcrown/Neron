@@ -43,6 +43,7 @@ class Birthdays(commands.Cog):
         
     def cog_unload(self):
         self.data.close_all()
+        self.check_birthdays.cancel()
         
     # Loop -----------------------------------------------
     
