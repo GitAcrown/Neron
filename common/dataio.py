@@ -12,7 +12,7 @@ class CogData:
     """Représente les données d'un module"""
     def __init__(self, cog_name: str):
         self.cog_name = cog_name
-        self.cog_folder = Path(f'cogs/{self.cog_name}')
+        self.cog_folder = Path(f'cogs/{cog_name}')
         
         self.__connections : dict[Any, 'ObjectData'] = {} # Cache des connexions aux bases de données des objets
         

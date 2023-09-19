@@ -181,7 +181,7 @@ class Quotes(commands.Cog):
         box_w, _ = int(w * 0.92), int(h * 0.72)
         image = Image.open(avatar).convert("RGBA").resize(size)
         font_path = str(self.data.bundled_data_path / "NotoBebasNeue.ttf")
-        bg_color = colorgram.extract(image.resize((int(w*0.1), int(w*0.1))), 1)[0].rgb 
+        bg_color = colorgram.extract(image.resize((100, 100)), 1)[0].rgb 
         grad_magnitude = 0.80 + 0.05 * (len(text) // 100)
         image = self._add_gradient(image, grad_magnitude, bg_color)
         luminosity = (0.2126 * bg_color[0] + 0.7152 * bg_color[1] + 0.0722 * bg_color[2]) / 255
