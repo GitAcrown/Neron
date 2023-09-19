@@ -224,6 +224,7 @@ class ObjectData:
 def get_cog_data(cog: commands.Cog | str) -> CogData:
     """Renvoie les données d'un module sous la forme d'un objet CogData"""
     cog_name = cog if isinstance(cog, str) else cog.qualified_name
+    cog_name = cog_name.lower()
     if cog_name not in COGS:
         COGS[cog_name] = CogData(cog_name)
     return COGS[cog_name]
