@@ -89,7 +89,7 @@ class QuotifyView(discord.ui.View):
                 await self.interaction.edit_original_response(content=str(e), view=None)
             return None
         
-    @discord.ui.button(label="Enregistrer et quitter", style=discord.ButtonStyle.green, row=1)
+    @discord.ui.button(label="Enregistrer", style=discord.ButtonStyle.green, row=1)
     async def save_quit(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
         new_view = discord.ui.View()
@@ -152,7 +152,7 @@ class Quotes(commands.Cog):
         if not isinstance(message.channel, (discord.TextChannel, discord.Thread)):
             return await interaction.response.send_message("**Action impossible** · Le message sélectionné n'est pas dans un salon textuel", ephemeral=True)
         try:
-            view = QuotifyView(self, message, timeout=30)
+            view = QuotifyView(self, message, timeout=20)
             await view.start(interaction)
         except Exception as e:
             logger.exception(e)
