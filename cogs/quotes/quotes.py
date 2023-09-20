@@ -156,7 +156,7 @@ class Quotes(commands.Cog):
             await view.start(interaction)
         except Exception as e:
             logger.exception(e)
-            return await interaction.response.send_message("**Erreur** · Impossible de créer le menu de citation", ephemeral=True)
+            return await interaction.edit_original_response(content="**Erreur** · Impossible de créer le menu de citation, veuillez réessayer", view=None)
         
     # Quotify ---------------------------------------------------------------
 
