@@ -97,6 +97,9 @@ class CogData:
         :param objects: Itérable d'objets concernés
         :param queries: Itérable de requêtes SQL à exécuter
         """
+        if not isinstance(objects, Iterable) or not isinstance(queries, Iterable):
+            raise TypeError("objects and queries must be iterables")
+        
         for obj in objects:
             if _parse_object(obj) is None:
                 raise ValueError(f"Invalid object '{obj}'")
@@ -114,6 +117,9 @@ class CogData:
         :param objects: Itérable d'objets concernés
         :param default_settings: Paramètres par défaut
         """
+        if not isinstance(objects, Iterable):
+            raise TypeError("objects must be an iterable")
+        
         query = """CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)"""
         for obj in objects:
             if _parse_object(obj) is None:
