@@ -269,16 +269,17 @@ class Starboard(commands.Cog):
         await interaction.response.send_message(f"**Paramètre modifié** · Le salon de compilation des messages favoris est maintenant **{'activé' if enabled else 'désactivé'}**.", ephemeral=True)
         
     @config_sb_group.command(name='manual')
-    async def config_manual_add(self, interaction: Interaction, message_id: int):
+    async def config_manual_add(self, interaction: Interaction, message_id: str):
         """Ajoute manuellement un message au salon de compilation des messages favoris
 
         :param message_id: L'ID du message à ajouter"""
         if not isinstance(interaction.channel, (discord.TextChannel, discord.Thread)):
             return await interaction.response.send_message("**Erreur** · Le salon doit être un salon textuel classique.", ephemeral=True)
-        message = await interaction.channel.fetch_message(message_id)
+        
+        message = await interaction.channel.fetch_message(int(message_id))
         if not message:
             return await interaction.response.send_message("**Erreur** · Le message n'a pas été trouvé.", ephemeral=True)
-        await self.handle_starboard_message(message)
+        await self.handle_starboard_message(message, ignore_threshold=True)
         await interaction.response.send_message(f"**Message ajouté** · Le message a été ajouté au salon de compilation des messages favoris.", ephemeral=True, delete_after=10)
         
     @config_sb_group.command(name='channel')
