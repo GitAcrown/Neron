@@ -255,6 +255,7 @@ class Birthdays(commands.Cog):
         :param channel: Salon où envoyer les messages, ou rien pour supprimer le salon actuel"""
         if not channel:
             self.data.update_settings(interaction.guild, {'NotificationChannel': 0})
+            return await interaction.response.send_message("**Salon supprimé** · Les messages d'anniversaire ne seront plus envoyés", ephemeral=True)
         
         if not isinstance(channel, discord.TextChannel):
             return await interaction.response.send_message("**Salon invalide** · Le salon sélectionné doit être un salon textuel classique")
@@ -269,6 +270,7 @@ class Birthdays(commands.Cog):
         :param role: Rôle à attribuer, ou rien pour supprimer le rôle actuel"""
         if not role:
             self.data.update_settings(interaction.guild, {'RoleID': 0})
+            return await interaction.response.send_message("**Rôle supprimé** · Les membres n'auront plus de rôle attribué à leur anniversaire", ephemeral=True)
         
         if not isinstance(role, discord.Role):
             return await interaction.response.send_message("**Rôle invalide** · Le rôle sélectionné doit être un rôle")
