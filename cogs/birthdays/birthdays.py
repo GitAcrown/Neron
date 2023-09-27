@@ -35,6 +35,7 @@ class Birthdays(commands.Cog):
         guilds = self.bot.guilds
         self.__initialize_guilds(guilds)
         self.__initialize_users()
+        await self.bot.wait_until_ready()
         self.check_birthdays.start()
         
     @commands.Cog.listener()

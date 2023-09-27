@@ -44,6 +44,7 @@ class Starboard(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         self.__initialize_guilds(self.bot.guilds)
+        await self.bot.wait_until_ready()
         self.task_message_expire.start()
     
     @commands.Cog.listener()
@@ -181,7 +182,7 @@ class Starboard(commands.Cog):
             
         return em
     
-    async def handle_starboard_message(self, message: discord.Message):
+    async def handle_starboard_message(self, message: discord.Message, *, ignore_threshold: bool = False):
         """Met à jour le message du starboard correspondant au message donné ou le crée s'il n'existe pas"""
         guild = message.guild
         starboard_channel = self.get_starboard_channel(guild) # type: ignore
@@ -200,7 +201,7 @@ class Starboard(commands.Cog):
         votes = self.get_message_votes(guild, message.id) # type: ignore
         emote = self.data.get_setting(guild, 'Emote')
         notify = bool(self.data.get_setting(guild, 'NotifyNearThreshold', cast_as=int))
-        if len(votes) < threshold:
+        if len(votes) < threshold and not ignore_threshold:
             # Si le message à la moitié + 1 vote et qu'on doit notifier, on notifie
             if notify and len(votes) == threshold // 2 + 1 and threshold > 1:
                 await message.reply(f"`{emote}` Ce message a atteint plus de la moitié du seuil de votes requis pour apparaître dans {starboard_channel.mention} (**{len(votes)}**/{threshold}) !", mention_author=False, delete_after=60)
@@ -266,6 +267,19 @@ class Starboard(commands.Cog):
         :param enabled: True pour activer, False pour désactiver"""
         self.data.update_settings(interaction.guild, {'Enabled': int(enabled)})
         await interaction.response.send_message(f"**Paramètre modifié** · Le salon de compilation des messages favoris est maintenant **{'activé' if enabled else 'désactivé'}**.", ephemeral=True)
+        
+    @config_sb_group.command(name='manual')
+    async def config_manual_add(self, interaction: Interaction, message_id: int):
+        """Ajoute manuellement un message au salon de compilation des messages favoris
+
+        :param message_id: L'ID du message à ajouter"""
+        if not isinstance(interaction.channel, (discord.TextChannel, discord.Thread)):
+            return await interaction.response.send_message("**Erreur** · Le salon doit être un salon textuel classique.", ephemeral=True)
+        message = await interaction.channel.fetch_message(message_id)
+        if not message:
+            return await interaction.response.send_message("**Erreur** · Le message n'a pas été trouvé.", ephemeral=True)
+        await self.handle_starboard_message(message)
+        await interaction.response.send_message(f"**Message ajouté** · Le message a été ajouté au salon de compilation des messages favoris.", ephemeral=True, delete_after=10)
         
     @config_sb_group.command(name='channel')
     @app_commands.rename(channel='salon')
