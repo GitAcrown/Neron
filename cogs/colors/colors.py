@@ -468,7 +468,7 @@ class Colors(commands.Cog):
          # On vérifie si le rôle servant de repère existe
         boundary_role = self.get_boundary_role(guild)
         if not boundary_role:
-            txt += "\n**Information importante** · Un rôle servant de repère doit être défini pour que les rôles de couleurs puissent être rangés en dessous de celui-ci. Utilisez `/configcolors boundary` pour le définir."
+            txt += "\n**[!] Information importante** · Un rôle servant de repère doit être défini pour que les rôles de couleurs puissent être rangés en dessous de celui-ci. Utilisez `/configcolors boundary` pour le définir."
         
         self.data.update_settings(guild, {'Enabled': int(enabled)})
         await interaction.response.send_message(txt, ephemeral=True)
@@ -487,7 +487,7 @@ class Colors(commands.Cog):
         txt = f"**Paramètre modifié** · Le rôle servant de repère a été défini sur {role.mention if role else '`aucun`'}"
         if role:
             if role.position >= guild.me.top_role.position:
-                txt += "\n**Information importante** · Un des rôle du bot doit forcément être au dessus du rôle servant de repère pour que les rôles de couleurs puissent être rangés en dessous de celui-ci."
+                txt += "\n**[!] Information importante** · Un des rôle du bot doit forcément être au dessus du rôle servant de repère pour que les rôles de couleurs puissent être rangés en dessous de celui-ci."
         
         self.set_boundary_role(guild, role)
         await interaction.response.send_message(txt, ephemeral=True)
