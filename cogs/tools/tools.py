@@ -56,6 +56,7 @@ class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outil
         embed = discord.Embed(title=guild.name, description=guild.description, color=pretty.DEFAULT_EMBED_COLOR)
         embed.set_thumbnail(url=guild.icon.url if guild.icon else None)
         embed.add_field(name='Membres', value=f'{guild.member_count} membres')
+        embed.add_field(name='Boosters', value=f'{guild.premium_subscription_count} boosters')
         embed.add_field(name='Propriétaire', value=guild.owner.mention if guild.owner else None)
         embed.add_field(name='Création', value=f"<t:{int(guild.created_at.timestamp())}:R>")
         if guild.banner:
@@ -63,6 +64,7 @@ class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outil
         await interaction.response.send_message(embed=embed, ephemeral=True)
         
     @app_commands.command(name='getemojis')
+    @app_commands.rename(silent='silencieux')
     async def getemojis(self, interaction: Interaction, emojis: str, silent: bool = False):
         """Extrait l'image des emojis donnés
         
