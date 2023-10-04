@@ -12,7 +12,7 @@ from tabulate import tabulate
 from common.utils import pretty
 from common import dataio
 
-WEBHOOK_INFO = {
+WEBHOOK_DEFAULT = {
     'name': 'Sorties',
     'avatar': 'https://i.imgur.com/d11TTS8.png'
 }
@@ -26,7 +26,9 @@ class Exit(commands.Cog):
     def __initialize_guilds(self, guilds: Iterable[discord.Guild]):
         default_settings = {
             'Enabled': 0,
-            'WebhookURL': ''
+            'WebhookURL': '',
+            'WebhookName': WEBHOOK_DEFAULT['name'],
+            'WebhookAvatar': WEBHOOK_DEFAULT['avatar']
         }
         self.data.build_settings_table(guilds, default_settings)
         
@@ -48,8 +50,10 @@ class Exit(commands.Cog):
     
     async def send_webhook(self, guild: discord.Guild, message: str):
         webhook = self.get_guild_webhook(guild)
+        name = self.data.get_setting(guild, 'WebhookName')
+        avatar = self.data.get_setting(guild, 'WebhookAvatar')
         if webhook:
-            await webhook.send(message, username=WEBHOOK_INFO['name'], avatar_url=WEBHOOK_INFO['avatar'])
+            await webhook.send(message, username=name, avatar_url=avatar)
         
     # Départs -----------------------------------------------------------------
     
@@ -100,16 +104,36 @@ class Exit(commands.Cog):
         self.data.update_settings(guild, {'WebhookURL': url})
         await interaction.response.send_message(f"L'URL du webhook a été mise à jour.", ephemeral=True)
         
-    @settings_group.command(name='info')
-    async def info(self, interaction: Interaction):
-        """Affiche des informations concernant la création d'un webhook"""
+    @settings_group.command(name='name')
+    async def webhook_name(self, interaction: Interaction, name: str):
+        """Définit le nom qui doit être utilisé par le webhook pour les départs
+
+        :param name: Nom du webhook
+        """
+        guild = interaction.guild
+        self.data.update_settings(guild, {'WebhookName': name})
+        await interaction.response.send_message(f"Le nom du webhook a été mis à jour pour **{name}**.", ephemeral=True)
+        
+    @settings_group.command(name='avatar')
+    async def webhook_avatar(self, interaction: Interaction, avatar: str):
+        """Définit l'avatar qui doit être utilisé par le webhook pour les départs
+
+        :param avatar: URL de l'avatar
+        """
+        guild = interaction.guild
+        self.data.update_settings(guild, {'WebhookAvatar': avatar})
+        await interaction.response.send_message(f"L'avatar du webhook a été mis à jour pour **<{avatar}>**.", ephemeral=True)
+        
+    @settings_group.command(name='help')
+    async def webhook_help(self, interaction: Interaction):
+        """Affiche de l'aide pour créer un webhook et configurer le suivi des départs"""
         txt = f"""
         Pour créer un webhook, rendez-vous dans les paramètres du salon dans lequel vous souhaitez recevoir les notifications de départs puis allez dans le volet "Intégrations".
         Cliquez ensuite sur "Webhooks" puis "Nouveau webhook". Le nom et l'avatar n'a pas d'importance : cliquez sur "Copier l'URL du webhook" et fermez la fenêtre.
         Collez ensuite cet url dans la commande `/exit webhook` pour l'enregistrer.
         """
         em = discord.Embed(title="Créer un webhook", description=txt, color=pretty.DEFAULT_EMBED_COLOR)
-        em.set_thumbnail(url=WEBHOOK_INFO['avatar'])
+        em.set_thumbnail(url=WEBHOOK_DEFAULT['avatar'])
         await interaction.response.send_message(embed=em, ephemeral=True)
             
 async def setup(bot):
