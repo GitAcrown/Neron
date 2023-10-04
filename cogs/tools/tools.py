@@ -1,20 +1,11 @@
-import logging
-from os import name
-import random
 import re
-from datetime import datetime, timedelta
-from typing import Any, Iterable, List
 
 import discord
-from io import BytesIO
-import re
 from discord import Interaction, app_commands
 from discord.ext import commands
-from numpy import isin
-from tabulate import tabulate
 
 from common.utils import pretty
-        
+
 class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outils divers"):
     """Ensemble d'outils divers"""
     def __init__(self, bot: commands.Bot):
