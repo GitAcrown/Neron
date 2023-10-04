@@ -79,7 +79,7 @@ class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outil
         if not links:
             await interaction.response.send_message("**Erreur** · Aucun emoji valide trouvé.", ephemeral=True)
             return
-        await interaction.response.send_message("\n".join(links), ephemeral=not silent)
+        await interaction.response.send_message("\n".join(links), ephemeral=silent)
                     
 async def setup(bot):
     await bot.add_cog(Tools(bot))
