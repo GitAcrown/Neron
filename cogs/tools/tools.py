@@ -55,7 +55,7 @@ class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outil
         embed.add_field(name='Création', value=f"<t:{int(guild.created_at.timestamp())}:R>")
         if guild.banner:
             embed.set_image(url=guild.banner.url)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed)
         
     @app_commands.command(name='getemojis')
     @app_commands.rename(silent='silencieux')
@@ -68,6 +68,7 @@ class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outil
         if not emojis:
             await interaction.response.send_message("**Erreur** · Aucun emoji valide trouvé.", ephemeral=True)
             return
+        emojis = list(set(emojis)) # On retire les doublons #type: ignore
         if len(emojis) > 10:
             await interaction.response.send_message("**Erreur** · Vous ne pouvez pas extraire plus de 10 emojis à la fois.", ephemeral=True)
             return
