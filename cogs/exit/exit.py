@@ -12,6 +12,8 @@ from tabulate import tabulate
 from common.utils import pretty
 from common import dataio
 
+logger = logging.getLogger(f'Neron.{__name__.capitalize()}')
+
 WEBHOOK_DEFAULT = {
     'name': 'Sorties',
     'avatar': 'https://i.imgur.com/d11TTS8.png'

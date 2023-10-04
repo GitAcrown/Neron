@@ -1,10 +1,13 @@
 import re
 
 import discord
+import logging
 from discord import Interaction, app_commands
 from discord.ext import commands
 
 from common.utils import pretty
+
+logger = logging.getLogger(f'Neron.{__name__.capitalize()}')
 
 class Tools(commands.GroupCog, group_name='tools', description="Ensemble d'outils divers"):
     """Ensemble d'outils divers"""
