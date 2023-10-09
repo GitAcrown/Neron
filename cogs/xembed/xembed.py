@@ -1,16 +1,13 @@
 import re
-from typing import Iterable, Optional
+from typing import Iterable
 from io import BytesIO
 
 import discord
 import logging
-from httpx import delete
-import requests
 import aiohttp
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from common.utils import pretty
 from common import dataio
 
 logger = logging.getLogger(f'Neron.{__name__.capitalize()}')
