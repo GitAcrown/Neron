@@ -120,7 +120,7 @@ class XEmbed(commands.Cog):
                 text += f'{data["text"]}\n'
                 
             if medias_too_big:
-                text += '\n'.join([f"{'📷' if m['type'] is 'image' else '📼'} [{m['type'].capitalize()}]({m['url']})" for m in medias_too_big])
+                text += '\n'.join([f"{'📷' if m['type'] == 'image' else '📼'} [{m['type'].capitalize()}]({m['url']})" for m in medias_too_big])
                 
             likes, replies, retweets = data['likes'], data['replies'], data['retweets']
             text += f'\n❤️ `{likes}` | 💬 `{replies}` | 🔁 `{retweets}`'
