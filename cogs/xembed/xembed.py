@@ -152,7 +152,7 @@ class XEmbed(commands.Cog):
             view_message = await message.reply(text, files=medias, mention_author=False)
             
             view = CancelButtonView(message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
-            await view_message.edit(view=view)
+            await view_message.edit(view=view, suppress=True)
             
     def sub_xeet_link(self, message: discord.Message) -> list[str]:
         """Remplace les liens X par des liens VXTwitter et renvoie la liste des liens remplacés"""
