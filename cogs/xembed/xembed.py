@@ -1,4 +1,3 @@
-from hmac import new
 import re
 from typing import Iterable
 from io import BytesIO
