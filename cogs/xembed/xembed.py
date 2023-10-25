@@ -148,7 +148,7 @@ class XEmbed(commands.Cog):
             likes, replies, retweets = data['likes'], data['replies'], data['retweets']
             text += f'\n❤️ `{likes}` | 💬 `{replies}` | 🔁 `{retweets}`'
             
-            view_message = await message.reply(text, files=medias, mention_author=False)
+            view_message = await message.reply(text, files=medias, mention_author=False, suppress_embeds=True)
             
             view = CancelButtonView(message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
             await view_message.edit(view=view, suppress=True)
@@ -171,7 +171,6 @@ class XEmbed(commands.Cog):
                 new_links.append(link.replace('https://x.com/', 'https://vxtwitter.com/'))
         
         return new_links
-
             
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
