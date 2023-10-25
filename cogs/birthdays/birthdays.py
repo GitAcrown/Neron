@@ -22,7 +22,8 @@ class Birthdays(commands.Cog):
     def __initialize_guilds(self, guilds: Iterable[discord.Guild]):
         default_settings = {
             'NotificationChannel': 0,
-            'RoleID': 0
+            'RoleID': 0,
+            'SilentMentions': 1
         }
         self.data.build_settings_table(guilds, default_settings)
         
@@ -58,6 +59,7 @@ class Birthdays(commands.Cog):
         for guild in self.bot.guilds:
             channel_id : int = self.data.get_setting(guild, 'NotificationChannel', cast_as=int)
             role_id : int = self.data.get_setting(guild, 'RoleID', cast_as=int)
+            silent = self.data.get_setting(guild, 'SilentMentions', cast_as=int)
             
             birthdays = self.get_birthdays_today(guild)
             
@@ -95,7 +97,7 @@ class Birthdays(commands.Cog):
                 astro = self.get_zodiac_sign(datetime.now())
                 astro = f" · {astro[1]}" if astro else ''
                 msg += f"\n**{datetime.now().strftime('%d/%m')}**{astro}"
-                await channel.send(msg)
+                await channel.send(msg, silent=bool(silent))
         
     # Users -----------------------------------------------
     
@@ -277,6 +279,14 @@ class Birthdays(commands.Cog):
         
         self.data.update_settings(interaction.guild, {'RoleID': role.id})
         await interaction.response.send_message(f"**Rôle défini** · Le rôle {role.mention} sera attribué automatiquement aux membres dont c'est l'anniversaire", ephemeral=True)
+        
+    @mod_group.command(name='silent')
+    async def _silent_birthday(self, interaction: Interaction, silent: bool):
+        """Définir si les messages d'anniversaire doivent notifier (ping) les membres ou non
+        
+        :param silent: `True` pour ne pas mentionner les membres, `False` pour les mentionner"""
+        self.data.update_settings(interaction.guild, {'SilentMentions': int(silent)})
+        await interaction.response.send_message(f"**Mentions définies** · Les messages d'anniversaire {'ne mentionneront pas' if silent else 'mentionneront'} les membres", ephemeral=True)
         
 async def setup(bot):
     await bot.add_cog(Birthdays(bot))
