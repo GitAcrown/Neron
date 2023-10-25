@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import re
 import textwrap
 from io import BytesIO
@@ -120,6 +121,14 @@ class Quotes(commands.Cog):
             extras={'description': "Créer une image avec le contenu du message"}
         )
         self.bot.tree.add_command(self.quotify)
+        
+        self.__assets = {}
+        self.__load_assets()
+        
+    def __load_assets(self):
+        """Charge en amont les assets du cog"""
+        self.__assets['icon_white'] = Image.open(str(self.data.bundled_data_path / "quotes_white_A.png")).convert("RGBA")
+        self.__assets['icon_black'] = Image.open(str(self.data.bundled_data_path / "quotes_black_A.png")).convert("RGBA")
     
     @app_commands.command(name='quote')
     @app_commands.checks.cooldown(1, 600)
@@ -165,59 +174,60 @@ class Quotes(commands.Cog):
         if im.mode != 'RGBA':
             im = im.convert('RGBA')
         width, height = im.size
-        gradient = Image.new('L', (1, height), color=0xFF)
-        for x in range(height):
-            gradient.putpixel((0, x), int(255 * (gradient_magnitude * float(x)/(width))))
-        
-        alpha = gradient.resize(im.size)
-        black_im = Image.new('RGBA', (width, height), color=color) # i.e. black
-        black_im.putalpha(alpha)
+        y, _ = np.indices((height, width))
+        alpha = (gradient_magnitude * y / height * 255).astype(np.uint8)
+        alpha = np.minimum(alpha, 255)
+        black_im = Image.new('RGBA', (width, height), color=color)
+        black_im.putalpha(Image.fromarray(alpha))
         gradient_im = Image.alpha_composite(im, black_im)
         return gradient_im
 
-    def create_quote_image(self, avatar: str | BytesIO, text: str, author_name: str, date: str, *, size: tuple[int, int] = (512, 512)) -> Image.Image:
+    def create_quote_image(self, avatar: str | BytesIO, text: str, author_name: str, date: str, *, size: tuple[int, int] = (512, 512)):
+        """Crée une image de citation avec un avatar, un texte, un nom d'auteur et une date."""
         text = text.upper()
+
         w, h = size
         box_w, _ = int(w * 0.92), int(h * 0.72)
         image = Image.open(avatar).convert("RGBA").resize(size)
+
         font_path = str(self.data.bundled_data_path / "NotoBebasNeue.ttf")
-        bg_color = colorgram.extract(image.resize((100, 100)), 1)[0].rgb 
-        grad_magnitude = 0.80 + 0.05 * (len(text) // 100)
+        bg_color = colorgram.extract(image.resize((50, 50)), 1)[0].rgb 
+        grad_magnitude = 0.85 + 0.05 * (len(text) // 100)
         image = self._add_gradient(image, grad_magnitude, bg_color)
         luminosity = (0.2126 * bg_color[0] + 0.7152 * bg_color[1] + 0.0722 * bg_color[2]) / 255
-        
+
         text_size = int(h * 0.08)
         text_font = ImageFont.truetype(font_path, text_size, encoding='unic')
         draw = ImageDraw.Draw(image)
-        
-        # Texte principal ---------
         text_color = (255, 255, 255) if luminosity < 0.5 else (0, 0, 0)
+
+        # Texte principal --------
         max_lines = len(text) // 60 + 2 if len(text) > 200 else 4
         wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
         lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
         while lines[-1] == "§":
-            text_size -= 4
-            text_font = ImageFont.truetype(font_path, text_size, encoding='unic')
+            text_size -= 2
+            text_font.size = text_size
             wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
             lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
-        text_box = draw.multiline_textbbox((w / 2, h * 0.87), lines, font=text_font, spacing=0.25, align='center', anchor='md')
-        draw.multiline_text((w / 2, h * 0.87), lines, font=text_font, spacing=0.25, align='center', fill=text_color, anchor='md')
-        
-        # Icône ------------------
-        icon_path_A = "quotes_white_A.png" if luminosity < 0.5 else "quotes_black_A.png"
-        icon_path_A = str(self.data.bundled_data_path / icon_path_A)
-        icon_A = Image.open(icon_path_A).convert("RGBA").resize((int(w * 0.1), int(w * 0.1)))
-        image.paste(icon_A, (int(text_box[0] + (text_box[2] - text_box[0]) / 2 - icon_A.size[0] / 2), int(text_box[1] - icon_A.size[1])), icon_A)
+        draw.multiline_text((w / 2, h * 0.835), lines, font=text_font, spacing=0.25, align='center', fill=text_color, anchor='md')
 
-        # Auteur -----------------
-        author_font = ImageFont.truetype(font_path, int(h * 0.055), encoding='unic')
+        # Icone et lignes ---------
+        icon = self.__assets['icon_white'] if luminosity < 0.5 else self.__assets['icon_black']
+        icon_image = icon.resize((int(w * 0.06), int(w * 0.06)))
+        icon_left = w / 2 - icon_image.width / 2
+        image.paste(icon_image, (int(icon_left), int(h * 0.85 - icon_image.height / 2)), icon_image)
+
+        author_font = ImageFont.truetype(font_path, int(h * 0.060), encoding='unic')
         draw.text((w / 2,  h * 0.95), author_name, font=author_font, fill=text_color, anchor='md', align='center')
-        draw.line((w / 2 - box_w / 4, h * 0.87, w / 2 + box_w / 4, h * 0.87), fill=text_color, width=1)
-        
+
+        draw.line((icon_left - w * 0.25, h * 0.85, icon_left - w * 0.02, h * 0.85), fill=text_color, width=1) # Ligne de gauche
+        draw.line((icon_left + icon_image.width + w * 0.02, h * 0.85, icon_left + icon_image.width + w * 0.25, h * 0.85), fill=text_color, width=1) # Ligne de droite
+
         # Date -------------------
-        date_font = ImageFont.truetype(font_path, int(h * 0.04), encoding='unic')
-        draw.text((w / 2,  h * 0.98), date, font=date_font, fill=text_color, anchor='md', align='center')
-        
+        date_font = ImageFont.truetype(font_path, int(h * 0.040), encoding='unic')
+        draw.text((w / 2,  h * 0.985), date, font=date_font, fill=text_color, anchor='md', align='center')
+
         return image
     
     async def fetch_following_messages(self, starting_message: discord.Message, messages_limit: int = 5, lenght_limit: int = 1000) -> list[discord.Message]:
