@@ -207,7 +207,7 @@ class Quotes(commands.Cog):
         lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
         while lines[-1] == "§":
             text_size -= 2
-            text_font.size = text_size
+            text_font = ImageFont.truetype(font_path, text_size, encoding='unic')
             wrap_width = int(box_w / (text_font.getlength("A") * 0.85))
             lines = textwrap.fill(text, width=wrap_width, max_lines=max_lines, placeholder="§")
         draw.multiline_text((w / 2, h * 0.835), lines, font=text_font, spacing=0.25, align='center', fill=text_color, anchor='md')
