@@ -1,3 +1,4 @@
+import codecs
 import logging
 from pathlib import Path
 import numpy as np
@@ -335,11 +336,12 @@ class Quotes(commands.Cog):
             cv2.rectangle(im, (mw, h - mh), (mw + int(bar_length * (i / nb)), h - mh - bar_width), text_color, -1)
             images.append(im)
         clip = mp.ImageSequenceClip(images, fps=fps)
-        clip = clip.set_audio(mp.AudioFileClip(audio_path))
-        
         file_name = f"{date.replace('/','-')}.mp4"
         file_path = str(self.__temp_folder / file_name)
-        clip.write_videofile(file_path, fps=fps)
+        audio_clip = mp.AudioFileClip(audio_path)
+        clip = clip.set_audio(audio_clip)
+        clip.write_videofile(file_path, fps=fps, audio_codec='aac', logger=None)
+        audio_clip.close()
         return file_path
         
     async def fetch_following_messages(self, starting_message: discord.Message, messages_limit: int = 5, lenght_limit: int = 1000) -> list[discord.Message]:
