@@ -194,10 +194,12 @@ class Quotes(commands.Cog):
                         return 
                     except commands.CommandError as e:
                         await interaction.followup.send(f"**Erreur** · Impossible de créer la vidéo de la citation\n{e}", ephemeral=True)
+                        self.__busy = False
                         return
                     except Exception as e:
                         logger.exception(e)
                         await interaction.followup.send(f"**Erreur** · Impossible de créer la vidéo de la citation\n{e}", ephemeral=True)
+                        self.__busy = False
                         return
                     
         if not message.content or message.content.isspace():
@@ -389,6 +391,9 @@ class Quotes(commands.Cog):
             raise commands.CommandError("Le message ne contient pas de fichier audio")
         for attachment in message.attachments:
             if attachment.content_type and attachment.content_type.startswith('audio/'):
+                # On vérifie que le fichier audio n'est pas trop gros (< 8Mo)
+                if attachment.size > 8 * 1024 * 1024:
+                    raise commands.CommandError("Le fichier audio est trop gros (8Mo max)")
                 audio_path = self.__temp_folder / attachment.filename
                 await attachment.save(audio_path)
                 author_name = f"@{message.author.name}" if message.author.name.lower() == message.author.display_name.lower() else f"{message.author.display_name} (@{message.author.name})"
