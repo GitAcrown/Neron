@@ -1,11 +1,16 @@
 import logging
+from pathlib import Path
 import numpy as np
 import re
+import os
 import textwrap
 from io import BytesIO
 from typing import List, Optional, Tuple
 
 import aiohttp
+import moviepy.editor as mp
+import cv2
+import ffmpeg
 import colorgram
 import discord
 from discord import Interaction, app_commands
@@ -116,12 +121,13 @@ class Quotes(commands.Cog):
         self.data = dataio.get_cog_data(self)
         
         self.quotify = app_commands.ContextMenu(
-            name='Citer en image',
+            name='Imager ce message',
             callback=self.message_menu_quotify,
-            extras={'description': "Créer une image avec le contenu du message"}
+            extras={'description': "Créer une image ou une vidéo avec le contenu du message"}
         )
         self.bot.tree.add_command(self.quotify)
         
+        self.__busy = False
         self.__assets = {}
         self.__load_assets()
         
@@ -129,6 +135,19 @@ class Quotes(commands.Cog):
         """Charge en amont les assets du cog"""
         self.__assets['icon_white'] = Image.open(str(self.data.bundled_data_path / "quotes_white_A.png")).convert("RGBA")
         self.__assets['icon_black'] = Image.open(str(self.data.bundled_data_path / "quotes_black_A.png")).convert("RGBA")
+        self.__assets['musical_note_white'] = Image.open(str(self.data.bundled_data_path / "musical-note_white.png")).convert("RGBA")
+        self.__assets['musical_note_black'] = Image.open(str(self.data.bundled_data_path / "musical-note.png")).convert("RGBA")
+        
+        # On crée un dossier temp pour stocker temporairment les fichiers audio créés
+        temp_folder = self.data.cog_folder / "temp"
+        if not temp_folder.exists():
+            temp_folder.mkdir()
+        self.__temp_folder = temp_folder
+        
+    def cog_unload(self):
+        # On supprime les fichiers temporaires
+        for file in self.__temp_folder.iterdir():
+            os.remove(file)
     
     @app_commands.command(name='quote')
     @app_commands.checks.cooldown(1, 600)
@@ -156,6 +175,31 @@ class Quotes(commands.Cog):
         
     async def message_menu_quotify(self, interaction: Interaction, message: discord.Message):
         """Menu de création de citation"""
+        if message.attachments:
+            for attachment in message.attachments:
+                if attachment.content_type and attachment.content_type.startswith('audio/'):
+                    if self.__busy:
+                        return await interaction.response.send_message("**Action impossible** · Le bot est déjà occupé à créer une citation vidéo, veuillez réessayer plus tard", ephemeral=True)
+                    self.__busy = True
+                    await interaction.response.defer()
+                    try:
+                        file, data = await self.audio_quote_msg_attachment(message)
+                        view = discord.ui.View()
+                        view.add_item(discord.ui.Button(label="Source", url=message.jump_url, style=discord.ButtonStyle.link))
+                        await interaction.followup.send(file=file, view=view)
+                        # On supprime les fichiers temporaires
+                        for path in data.values():
+                            os.remove(path)
+                        self.__busy = False
+                        return 
+                    except commands.CommandError as e:
+                        await interaction.followup.send(f"**Erreur** · Impossible de créer la vidéo de la citation\n{e}", ephemeral=True)
+                        return
+                    except Exception as e:
+                        logger.exception(e)
+                        await interaction.followup.send(f"**Erreur** · Impossible de créer la vidéo de la citation\n{e}", ephemeral=True)
+                        return
+                    
         if not message.content or message.content.isspace():
             return await interaction.response.send_message("**Action impossible** · Le message sélectionné ne contient pas de texte", ephemeral=True)
         if not isinstance(message.channel, (discord.TextChannel, discord.Thread)):
@@ -165,7 +209,7 @@ class Quotes(commands.Cog):
             await view.start(interaction)
         except Exception as e:
             logger.exception(e)
-            return await interaction.edit_original_response(content="**Erreur** · Impossible de créer le menu de citation, veuillez réessayer", view=None)
+            return await interaction.edit_original_response(content=f"**Erreur** · Impossible de créer le menu de citation, veuillez réessayer plus tard\n{e}", view=None)
         
     # Quotify ---------------------------------------------------------------
 
@@ -230,6 +274,72 @@ class Quotes(commands.Cog):
 
         return image
     
+    # Audio Quotify ---------------------------------------------------------
+    
+    def create_video_quote(self, audio_path: str, avatar: str | BytesIO, author_name: str, date: str, *, size: tuple[int, int] = (512, 512)):
+        """Crée une image de citation avec un avatar, un texte, un nom d'auteur et une date."""
+        w, h = size
+        image = Image.open(avatar).convert("RGBA").resize(size)
+        font_path = str(self.data.bundled_data_path / "NotoBebasNeue.ttf")
+        bg_color = colorgram.extract(image.resize((50, 50)), 1)[0].rgb 
+        grad_magnitude = 0.7
+        image = self._add_gradient(image, grad_magnitude, bg_color)
+        luminosity = (0.2126 * bg_color[0] + 0.7152 * bg_color[1] + 0.0722 * bg_color[2]) / 255
+        draw = ImageDraw.Draw(image)
+        
+        # On veut créer une couleur légèrement plus foncée que la couleur de fond
+        darker_bg_color = tuple([int(c * 0.8) for c in bg_color])
+        
+        # Nom de l'auteur
+        text_color = (255, 255, 255) if luminosity < 0.5 else (0, 0, 0)
+        author_font = ImageFont.truetype(font_path, int(h * 0.055), encoding='unic')
+        draw.text((w / 2,  h * 0.95), author_name, font=author_font, fill=text_color, anchor='md', align='center')
+        
+        # Lignes
+        # On fait une seule ligne fine au dessus du nom de l'auteur
+        draw.line((w * 0.25, h * 0.85, w * 0.75, h * 0.85), fill=text_color, width=1)
+            
+        # Date
+        date_font = ImageFont.truetype(font_path, int(h * 0.035), encoding='unic')
+        draw.text((w / 2,  h * 0.98), date, font=date_font, fill=text_color, anchor='md', align='center')
+        
+        # Icone
+        icon_note : Image.Image = self.__assets['musical_note_white'] if luminosity < 0.5 else self.__assets['musical_note_black']
+        icon_note = icon_note.resize((int(w * 0.2), int(w * 0.2)))
+        # On met l'icone au milieu de l'image un peu en bas
+        icon_left = w / 2 - icon_note.width / 2
+        image.paste(icon_note, (int(icon_left), int(h * 0.65 - icon_note.height / 2)), icon_note)
+        
+        # Images avec barre de progression
+        bg = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)[..., ::-1]
+        duration = float(ffmpeg.probe(audio_path)['format']['duration'])
+        fps = 1
+        images = []
+        nb = round(duration * fps)
+        # On veut que la barre se trouve à peu près au milieu de l'image
+        mw, mh = int(w * 0.2), int(h * 0.2)
+        bar_width = int(h * 0.01)
+        bar_length = w - 2 * mw
+        # On crée les images
+        for i in range(nb):
+            im = bg.copy()
+            if i == nb - 1:
+                cv2.rectangle(im, (mw, h - mh), (mw + bar_length, h - mh - bar_width), text_color, -1)
+                images.append(im)
+                break
+            # On dessine la barre (centre bas de l'image) (on veut qu'elle soit 50% transparente)
+            cv2.rectangle(im, (mw, h - mh), (mw + bar_length, h - mh - bar_width), darker_bg_color, -1)
+            # On dessine la progression de la barre (% de progression de la musique par rapport à la durée totale)
+            cv2.rectangle(im, (mw, h - mh), (mw + int(bar_length * (i / nb)), h - mh - bar_width), text_color, -1)
+            images.append(im)
+        clip = mp.ImageSequenceClip(images, fps=fps)
+        clip = clip.set_audio(mp.AudioFileClip(audio_path))
+        
+        file_name = f"{date.replace('/','-')}.mp4"
+        file_path = str(self.__temp_folder / file_name)
+        clip.write_videofile(file_path, fps=fps)
+        return file_path
+        
     async def fetch_following_messages(self, starting_message: discord.Message, messages_limit: int = 5, lenght_limit: int = 1000) -> list[discord.Message]:
         """Ajoute au message initial les messages suivants jusqu'à atteindre la limite de caractères ou de messages"""
         messages = [starting_message]
@@ -266,12 +376,33 @@ class Quotes(commands.Cog):
             image = self.create_quote_image(avatar, full_content, author_name, message_date, size=(700, 700))
         except Exception as e:
             logger.exception(e)
-            raise commands.CommandError(f"Impossible de créer l'image de la citation : `{e}`")
+            raise commands.CommandError(f"Impossible de créer l'image de la citation : {e}")
         with BytesIO() as buffer:
             image.save(buffer, format='PNG')
             buffer.seek(0)
             alt_text = f"\"{full_content}\" - @{messages[0].author.name} ({message_date})"
             return discord.File(buffer, filename='quote.png', description=alt_text)
+        
+    async def audio_quote_msg_attachment(self, message: discord.Message) -> Tuple[discord.File, dict[str, str | Path]]:
+        """Crée une vidéo de citation à partir d'un message contenant un fichier audio"""
+        if not message.attachments:
+            raise commands.CommandError("Le message ne contient pas de fichier audio")
+        for attachment in message.attachments:
+            if attachment.content_type and attachment.content_type.startswith('audio/'):
+                audio_path = self.__temp_folder / attachment.filename
+                await attachment.save(audio_path)
+                author_name = f"@{message.author.name}" if message.author.name.lower() == message.author.display_name.lower() else f"{message.author.display_name} (@{message.author.name})"
+                message_date = message.created_at.strftime("%d/%m/%y")
+                try:
+                    video_path = self.create_video_quote(str(audio_path), BytesIO(await message.author.display_avatar.read()), author_name, message_date)
+                except Exception as e:
+                    logger.exception(e)
+                    raise commands.CommandError(f"Impossible de créer la vidéo de la citation : {e}")
+                # On renvoie le fichier ainsi que les paths des fichiers temporaires pour les supprimer
+                filename = f"{message_date.replace('/','-')}.mp4"
+                return discord.File(video_path, filename=filename, description=f"\"{message.content}\" - @{message.author.name} ({message_date})"), {'audio_path': audio_path, 'video_path': video_path}
+        raise commands.CommandError("Le message ne contient pas de fichier audio")
+    
         
 async def setup(bot):
     await bot.add_cog(Quotes(bot))
