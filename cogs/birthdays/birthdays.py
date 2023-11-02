@@ -147,7 +147,12 @@ class Birthdays(commands.Cog):
     
     def get_birthdays_from(self, guild: discord.Guild) -> dict[discord.Member, datetime]:
         r = self.data.get('Users').fetchall("SELECT * FROM bdays")
-        return {m: datetime.now().strptime(row['date'], '%d/%m') for row in r if (m := guild.get_member(row['user_id']))}
+        members = {m.id: m for m in guild.members}
+        bdays = {}
+        for u in r:
+            if u['user_id'] in members:
+                bdays[members[u['user_id']]] = datetime.strptime(u['date'], '%d/%m')
+        return bdays
     
     def get_birthdays_today(self, guild: discord.Guild) -> list[discord.Member]:
         return [m for m, d in self.get_birthdays_from(guild).items() if d.month == datetime.now().month and d.day == datetime.now().day]
