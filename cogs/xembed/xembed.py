@@ -124,6 +124,26 @@ class XEmbed(commands.Cog):
                         for l in original_tweet['text'].split('\n'):
                             text += f'> {l}\n'
                         text += '**... Réponse ...**\n>>> '
+                        if not medias and not medias_too_big:
+                            for media in original_tweet['media_extended']:
+                                alt_text = media.get('altText', '')
+                                file_type = media['type']
+                                async with aiohttp.ClientSession() as session:
+                                    async with session.get(media['url']) as r:
+                                        if r.status == 200:
+                                            # Taille max 20 MB
+                                            s = int(r.headers['Content-Length'])
+                                            if s > 20 * 1024 * 1024:
+                                                logger.warning(f'Le média {media["url"]} est trop lourd ({s} bytes) et ne sera pas uploadé')
+                                                medias_too_big.append({'url': media['url'], 'type': file_type})
+                                                continue
+                                            m = BytesIO(await r.read())
+                                            m.seek(0)
+                                            # On cherche l'extension en sachant qu'il peut y avoir des tags à la fin
+                                            ext = re.findall(r'\.(\w+)(?:\?.*)?$', media['url'])[0]
+                                            medias.append(discord.File(m, description=alt_text, filename=f'{file_type}.{ext}'))
+                                        else:
+                                            logger.warning(f'Erreur lors de la récupération du média {media["url"]}')
             if data.get('qrtURL'):
                 if data['qrtURL'] != data['tweetURL']:
                     qrt_id = re.findall(r'(?:https?://(?:www\.)?(?:twitter|x)\.com/)(?:\w+/status/)?(\d+)', data['qrtURL'])
@@ -135,6 +155,26 @@ class XEmbed(commands.Cog):
                             for l in qrt_tweet['text'].split('\n'):
                                 text += f'> {l}\n'
                             text += '**... QRT ...**\n>>> '
+                            if not medias and not medias_too_big:
+                                for media in qrt_tweet['media_extended']:
+                                    alt_text = media.get('altText', '')
+                                    file_type = media['type']
+                                    async with aiohttp.ClientSession() as session:
+                                        async with session.get(media['url']) as r:
+                                            if r.status == 200:
+                                                # Taille max 20 MB
+                                                s = int(r.headers['Content-Length'])
+                                                if s > 20 * 1024 * 1024:
+                                                    logger.warning(f'Le média {media["url"]} est trop lourd ({s} bytes) et ne sera pas uploadé')
+                                                    medias_too_big.append({'url': media['url'], 'type': file_type})
+                                                    continue
+                                                m = BytesIO(await r.read())
+                                                m.seek(0)
+                                                # On cherche l'extension en sachant qu'il peut y avoir des tags à la fin
+                                                ext = re.findall(r'\.(\w+)(?:\?.*)?$', media['url'])[0]
+                                                medias.append(discord.File(m, description=alt_text, filename=f'{file_type}.{ext}'))
+                                            else:
+                                                logger.warning(f'Erreur lors de la récupération du média {media["url"]}')
                     
                             
             text += f'**{data["user_name"]}** (@{data["user_screen_name"]}) · <t:{data["date_epoch"]}:R>\n'
