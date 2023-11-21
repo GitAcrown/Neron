@@ -1,4 +1,5 @@
 import discord
+import re
 import logging
 from discord import Interaction, app_commands
 from discord.ext import commands
