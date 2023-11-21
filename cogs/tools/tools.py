@@ -130,21 +130,29 @@ class Tools(commands.Cog):
     async def getemojis(self, interaction: Interaction, emojis: str, silent: bool = False):
         """Extrait l'image des emojis donnés
         
-        :param emojis: Liste des emojis à extraire
+        :param emojis: Liste des emojis à extraire (séparés par un espace)
         :param silent: Si true, n'affichera les liens que pour vous"""
-        emojis = re.findall(r'<a?:\w+:\d+>', emojis) #type: ignore
-        if not emojis:
+        # On récupère en premier les emojis custom
+        custom = re.findall(r'<a?:\w+:\d+>', emojis) #type: ignore
+        # On récupère ensuite les emojis unicode
+        unicode = [c for c in emojis if ord(c) > 1000]
+        if not custom and not unicode:
             await interaction.response.send_message("**Erreur** · Aucun emoji valide trouvé.", ephemeral=True)
             return
-        emojis = list(set(emojis)) # On retire les doublons #type: ignore
-        if len(emojis) > 10:
+        unicode = list(set(unicode)) # On retire les doublons #type: ignore
+        custom = list(set(custom)) # On retire les doublons #type: ignore
+        total_emojis = len(unicode) + len(custom)
+        if total_emojis > 10:
             await interaction.response.send_message("**Erreur** · Vous ne pouvez pas extraire plus de 10 emojis à la fois.", ephemeral=True)
             return
         links = []
-        for emoji in emojis:
+        for emoji in custom:
             partial = discord.PartialEmoji.from_str(emoji)
             if partial.is_custom_emoji():
                 links.append(partial.url)
+        for emoji in unicode:
+            links.append(f'https://twemoji.maxcdn.com/v/latest/72x72/{ord(emoji):x}.png')
+            
         if not links:
             await interaction.response.send_message("**Erreur** · Aucun emoji valide trouvé.", ephemeral=True)
             return
