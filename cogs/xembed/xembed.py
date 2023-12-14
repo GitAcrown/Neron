@@ -39,7 +39,7 @@ class CancelButtonView(discord.ui.View):
     async def on_timeout(self):
         if not self.cancelled:
             # On efface que le bouton
-            await self.view_message.edit(view=None, suppress=True)
+            await self.view_message.edit(view=None)
 
 class XEmbed(commands.Cog):
     """Prise en charge des liens X (a.k.a. Twitter)"""
