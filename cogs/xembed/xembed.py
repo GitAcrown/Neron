@@ -19,7 +19,7 @@ class CancelButtonView(discord.ui.View):
     def __init__(self, cog: 'XEmbed', xeet_message: discord.Message, view_message: discord.Message, *, timeout: float | None = 10):
         super().__init__(timeout=timeout)
         self.__cog = cog
-        self.xeel_message = xeet_message
+        self.xeet_message = xeet_message
         self.view_message = view_message
         self.cancelled = False
 
@@ -29,10 +29,10 @@ class CancelButtonView(discord.ui.View):
         # On efface ce message
         await self.view_message.delete()
         # On restaure le message original
-        await self.xeel_message.edit(suppress=False)
+        await self.xeet_message.edit(suppress=False)
 
     async def interaction_check(self, interaction: Interaction):
-        if interaction.user != self.xeel_message.author:
+        if interaction.user != self.xeet_message.author:
             await interaction.response.send_message('Seul l\'auteur du message peut annuler la prévisualisation.', ephemeral=True)
             return False
         return True
