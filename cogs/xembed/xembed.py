@@ -16,8 +16,9 @@ API_ENDPOINT = 'https://api.vxtwitter.com/Twitter/status'
 
 class CancelButtonView(discord.ui.View):
     """Ajoute un bouton permettant d'annuler la preview et restaurer celle du message original"""
-    def __init__(self, xeet_message: discord.Message, view_message: discord.Message, *, timeout: float | None = 10):
+    def __init__(self, cog: 'XEmbed', xeet_message: discord.Message, view_message: discord.Message, *, timeout: float | None = 10):
         super().__init__(timeout=timeout)
+        self.__cog = cog
         self.xeel_message = xeet_message
         self.view_message = view_message
         self.cancelled = False
@@ -37,9 +38,10 @@ class CancelButtonView(discord.ui.View):
         return True
     
     async def on_timeout(self):
+        disp_mode = self.__cog.data.get_setting(self.xeet_message.guild, 'Mode')
         if not self.cancelled:
             # On efface que le bouton
-            await self.view_message.edit(view=None)
+            await self.view_message.edit(view=None, suppress=disp_mode == 'full')
 
 class XEmbed(commands.Cog):
     """Prise en charge des liens X (a.k.a. Twitter)"""
@@ -190,7 +192,7 @@ class XEmbed(commands.Cog):
             
             view_message = await message.reply(text, files=medias, mention_author=False, suppress_embeds=True)
             
-            view = CancelButtonView(message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
+            view = CancelButtonView(self, message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
             await view_message.edit(view=view, suppress=True)
             
     def sub_xeet_link(self, message: discord.Message) -> list[str]:
@@ -234,7 +236,7 @@ class XEmbed(commands.Cog):
                 links = self.sub_xeet_link(message)
                 if links:
                     view_message = await message.reply('\n'.join(links), mention_author=False)
-                    view = CancelButtonView(message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
+                    view = CancelButtonView(self, message, view_message, timeout=self.data.get_setting(message.guild, 'DeleteDelay', cast_as=int))
                     await view_message.edit(view=view)
                     
                 
