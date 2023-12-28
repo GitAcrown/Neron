@@ -1,3 +1,4 @@
+import io
 import logging
 import random
 from datetime import datetime
@@ -292,6 +293,21 @@ class Birthdays(commands.Cog):
         :param silent: `True` pour ne pas mentionner les membres, `False` pour les mentionner"""
         self.data.update_settings(interaction.guild, {'SilentMentions': int(silent)})
         await interaction.response.send_message(f"**Mentions définies** · Les messages d'anniversaire {'ne mentionneront pas' if silent else 'mentionneront'} les membres", ephemeral=True)
+        
+    # EXPORT =====================================================
+    
+    @commands.command(name='exportbdays')
+    @commands.is_owner()
+    async def _export_birthdays(self, ctx: commands.Context):
+        """Exporter les dates d'anniversaire de tous les membres du serveur sous le format user_id:jj/mm"""
+        r = self.data.get('Users').fetchall("SELECT * FROM bdays")
+        if not r:
+            return await ctx.send("**Aucun anniversaire** · Aucun membre n'a défini de date d'anniversaire")
+        
+        msg = ''
+        for u in r:
+            msg += f"{u['user_id']}:{u['date']}\n"
+        await ctx.send(f"**Dates d'anniversaire** · {len(r)} dates d'anniversaire trouvées", file=discord.File(filename='birthdays.txt', fp=io.BytesIO(msg.encode('utf-8'))))
         
 async def setup(bot):
     await bot.add_cog(Birthdays(bot))
